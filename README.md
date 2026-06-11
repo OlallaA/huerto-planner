@@ -7,50 +7,50 @@ The goal of the project is to provide an easy and intuitive way to organize a ve
 ## Features
 
 ### Current Version
-Crop management
-Irrigation scheduling
-Irrigation reminders
-Crop information tracking
-Integration with a weather API
-Weather-based irrigation recommendations
-Simple garden planning
+- Crop management
+- Irrigation scheduling
+- Irrigation reminders
+- Crop information tracking
+- Integration with a weather API
+- Weather-based irrigation recommendations
+- Simple garden planning
 
 ## Planned Features
-Seed inventory management
-Nursery and seedling tracking
-Sowing calendar
-Transplant planning
-Harvest tracking
-Location-based planting suggestions
-Personalized notifications and reminders
-Garden activity history
+- Seed inventory management
+- Nursery and seedling tracking
+- Sowing calendar
+- Transplant planning
+- Harvest tracking
+- Location-based planting suggestions
+- Personalized notifications and reminders
+- Garden activity history
 
 ## Project Structure
 
 The application is planned as a full-stack project with:
 
 ### Frontend
-HTML
-CSS
-JavaScript
+- HTML
+- CSS
+- JavaScript
 
 ### Backend
 
-Java
-Spring Boot
+- Java
+- Spring Boot
 
 ### Database
-MySQL
-Future Vision
+- MySQL
+- Future Vision
 
 The long-term goal is to create a gardening assistant that helps users:
 
-Know when to sow seeds.
-Track seedlings and nursery progress.
-Organize crops within their garden.
-Monitor irrigation needs.
-Receive recommendations based on local weather conditions.
-Plan seasonal gardening activities.
+- Know when to sow seeds.
+- Track seedlings and nursery progress.
+- Organize crops within their garden.
+- Monitor irrigation needs.
+- Receive recommendations based on local weather conditions.
+ -Plan seasonal gardening activities.
 
 For example, users will be able to register seed packets and receive notifications when the ideal sowing period begins. Weather information will also be used to provide smarter irrigation recommendations.
 
