@@ -38,6 +38,13 @@ src/main/resources/application-local.properties
 ### Diagrams ###
 Huerto-planner.drawio(1).png
 
+### Local project documents ###
+ANTEPROXECTO_HUERTO_PLANNER.odt
+.~lock.ANTEPROXECTO_HUERTO_PLANNER.odt#
+Módulo_de_proxecto_DAWdist_nov_dec.pdf
+TAREAS.md
+SESSION_SUMMARY.md
+
 # Compiled class file
 *.class
 
