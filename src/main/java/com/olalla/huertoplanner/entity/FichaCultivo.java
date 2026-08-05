@@ -48,7 +48,12 @@ public class FichaCultivo {
 
     @Enumerated(EnumType.STRING)
     private Month mesFinCosecha;
+
     private Integer frecuenciaRiego;
+
+    @Enumerated(EnumType.STRING)
+    private ExposicionSolar exposicionSolar;
+
     @Column(columnDefinition = "TEXT")
     private String observaciones;
 
@@ -142,6 +147,14 @@ public class FichaCultivo {
 
     public void setFrecuenciaRiego(Integer frecuenciaRiego) {
         this.frecuenciaRiego = frecuenciaRiego;
+    }
+
+    public ExposicionSolar getExposicionSolar() {
+        return exposicionSolar;
+    }
+
+    public void setExposicionSolar(ExposicionSolar exposicionSolar) {
+        this.exposicionSolar = exposicionSolar;
     }
 
     public String getObservaciones() {

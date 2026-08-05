@@ -1,6 +1,7 @@
 package com.olalla.huertoplanner.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.olalla.huertoplanner.entity.ExposicionSolar;
 
 import java.time.Month;
 
@@ -15,6 +16,7 @@ public record FichaCultivoResponse(
         @JsonFormat(shape = JsonFormat.Shape.STRING) Month mesInicioCosecha,
         @JsonFormat(shape = JsonFormat.Shape.STRING) Month mesFinCosecha,
         Integer frecuenciaRiego,
+        ExposicionSolar exposicionSolar,
         String observaciones,
         Long usuarioId,
         String usuarioNombre

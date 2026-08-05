@@ -3,6 +3,7 @@ package com.olalla.huertoplanner.service;
 import com.olalla.huertoplanner.dto.FichaCultivoCreateRequest;
 import com.olalla.huertoplanner.dto.FichaCultivoResponse;
 import com.olalla.huertoplanner.dto.FichaCultivoUpdateRequest;
+import com.olalla.huertoplanner.entity.ExposicionSolar;
 import com.olalla.huertoplanner.entity.FichaCultivo;
 import com.olalla.huertoplanner.entity.Usuario;
 import com.olalla.huertoplanner.exception.ResourceNotFoundException;
@@ -58,7 +59,7 @@ public class FichaCultivoService {
         applyRequest(ficha, request.nombre(), request.variedad(), request.mesInicioSiembra(),
                 request.mesFinSiembra(), request.mesInicioTrasplante(), request.mesFinTrasplante(),
                 request.mesInicioCosecha(), request.mesFinCosecha(), request.frecuenciaRiego(),
-                request.observaciones(), usuario);
+                request.exposicionSolar(), request.observaciones(), usuario);
 
         FichaCultivo saved = fichaCultivoRepository.save(ficha);
         return toResponse(saved);
@@ -72,7 +73,7 @@ public class FichaCultivoService {
         applyRequest(ficha, request.nombre(), request.variedad(), request.mesInicioSiembra(),
                 request.mesFinSiembra(), request.mesInicioTrasplante(), request.mesFinTrasplante(),
                 request.mesInicioCosecha(), request.mesFinCosecha(), request.frecuenciaRiego(),
-                request.observaciones(), usuario);
+                request.exposicionSolar(), request.observaciones(), usuario);
 
         return toResponse(ficha);
     }
@@ -94,6 +95,7 @@ public class FichaCultivoService {
             java.time.Month mesInicioCosecha,
             java.time.Month mesFinCosecha,
             Integer frecuenciaRiego,
+            ExposicionSolar exposicionSolar,
             String observaciones,
             Usuario usuario
     ) {
@@ -106,6 +108,7 @@ public class FichaCultivoService {
         ficha.setMesInicioCosecha(mesInicioCosecha);
         ficha.setMesFinCosecha(mesFinCosecha);
         ficha.setFrecuenciaRiego(frecuenciaRiego);
+        ficha.setExposicionSolar(exposicionSolar);
         ficha.setObservaciones(observaciones);
         ficha.setUsuario(usuario);
     }
@@ -134,6 +137,7 @@ public class FichaCultivoService {
                 ficha.getMesInicioCosecha(),
                 ficha.getMesFinCosecha(),
                 ficha.getFrecuenciaRiego(),
+                ficha.getExposicionSolar(),
                 ficha.getObservaciones(),
                 usuario.getId(),
                 usuario.getNombre()

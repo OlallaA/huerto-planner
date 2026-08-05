@@ -21,15 +21,18 @@ public class CultivoService {
     private final CultivoRepository cultivoRepository;
     private final FichaCultivoRepository fichaCultivoRepository;
     private final HuertoRepository huertoRepository;
+    private final RecordatorioService recordatorioService;
 
     public CultivoService(
             CultivoRepository cultivoRepository,
             FichaCultivoRepository fichaCultivoRepository,
-            HuertoRepository huertoRepository
+            HuertoRepository huertoRepository,
+            RecordatorioService recordatorioService
     ) {
         this.cultivoRepository = cultivoRepository;
         this.fichaCultivoRepository = fichaCultivoRepository;
         this.huertoRepository = huertoRepository;
+        this.recordatorioService = recordatorioService;
     }
 
     @Transactional(readOnly = true)
@@ -84,6 +87,7 @@ public class CultivoService {
         );
 
         Cultivo saved = cultivoRepository.save(cultivo);
+        recordatorioService.generarParaCultivo(saved);
         return toResponse(saved);
     }
 
@@ -104,12 +108,14 @@ public class CultivoService {
                 huerto
         );
 
+        recordatorioService.generarParaCultivo(cultivo);
         return toResponse(cultivo);
     }
 
     @Transactional
     public void delete(Long id) {
         Cultivo cultivo = findEntityById(id);
+        recordatorioService.eliminarParaCultivo(id);
         cultivoRepository.delete(cultivo);
     }
 
