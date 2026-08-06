@@ -1,9 +1,9 @@
 package com.olalla.plantplan.service;
 
-import com.olalla.plantplan.dto.UserCreateRequest;
 import com.olalla.plantplan.dto.UserResponse;
 import com.olalla.plantplan.dto.UserUpdateRequest;
 import com.olalla.plantplan.entity.User;
+import com.olalla.plantplan.exception.ForbiddenException;
 import com.olalla.plantplan.exception.ResourceNotFoundException;
 import com.olalla.plantplan.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,26 +31,13 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponse findById(Long id) {
-        return toResponse(findEntityById(id));
+    public UserResponse findById(Long userId, Long id) {
+        return toResponse(findOwnedEntity(userId, id));
     }
 
     @Transactional
-    public UserResponse create(UserCreateRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Ya existe un usuario con ese email");
-        }
-
-        User user = new User(request.name(), request.email(), request.password());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        User savedUser = userRepository.save(user);
-
-        return toResponse(savedUser);
-    }
-
-    @Transactional
-    public UserResponse update(Long id, UserUpdateRequest request) {
-        User user = findEntityById(id);
+    public UserResponse update(Long userId, Long id, UserUpdateRequest request) {
+        User user = findOwnedEntity(userId, id);
 
         if (userRepository.existsByEmailAndIdNot(request.email(), id)) {
             throw new IllegalArgumentException("Ya existe un usuario con ese email");
@@ -64,9 +51,19 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        User user = findEntityById(id);
+    public void delete(Long userId, Long id) {
+        User user = findOwnedEntity(userId, id);
         userRepository.delete(user);
+    }
+
+    private User findOwnedEntity(Long userId, Long id) {
+        User user = findEntityById(id);
+
+        if (!user.getId().equals(userId)) {
+            throw new ForbiddenException("No puedes acceder al usuario con id " + id);
+        }
+
+        return user;
     }
 
     private User findEntityById(Long id) {
