@@ -5,6 +5,7 @@ import com.olalla.plantplan.dto.GardenResponse;
 import com.olalla.plantplan.dto.GardenUpdateRequest;
 import com.olalla.plantplan.entity.Garden;
 import com.olalla.plantplan.entity.User;
+import com.olalla.plantplan.exception.ForbiddenException;
 import com.olalla.plantplan.exception.ResourceNotFoundException;
 import com.olalla.plantplan.repository.GardenRepository;
 import com.olalla.plantplan.repository.UserRepository;
@@ -25,31 +26,20 @@ public class GardenService {
     }
 
     @Transactional(readOnly = true)
-    public List<GardenResponse> findAll() {
-        return gardenRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
     public List<GardenResponse> findByUserId(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new ResourceNotFoundException("No existe un usuario con id " + userId);
-        }
-
         return gardenRepository.findByUserId(userId).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public GardenResponse findById(Long id) {
-        return toResponse(findEntityById(id));
+    public GardenResponse findById(Long userId, Long gardenId) {
+        return toResponse(findOwnedEntity(userId, gardenId));
     }
 
     @Transactional
-    public GardenResponse create(GardenCreateRequest request) {
-        User user = findUserById(request.userId());
+    public GardenResponse create(Long userId, GardenCreateRequest request) {
+        User user = findUserById(userId);
 
         Garden garden = new Garden();
         garden.setName(request.name());
@@ -64,23 +54,31 @@ public class GardenService {
     }
 
     @Transactional
-    public GardenResponse update(Long id, GardenUpdateRequest request) {
-        Garden garden = findEntityById(id);
-        User user = findUserById(request.userId());
+    public GardenResponse update(Long userId, Long gardenId, GardenUpdateRequest request) {
+        Garden garden = findOwnedEntity(userId, gardenId);
 
         garden.setName(request.name());
         garden.setLocation(request.location());
         garden.setLatitude(request.latitude());
         garden.setLongitude(request.longitude());
-        garden.setUser(user);
 
         return toResponse(garden);
     }
 
     @Transactional
-    public void delete(Long id) {
-        Garden garden = findEntityById(id);
+    public void delete(Long userId, Long gardenId) {
+        Garden garden = findOwnedEntity(userId, gardenId);
         gardenRepository.delete(garden);
+    }
+
+    private Garden findOwnedEntity(Long userId, Long gardenId) {
+        Garden garden = findEntityById(gardenId);
+
+        if (!garden.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("No puedes acceder al huerto con id " + gardenId);
+        }
+
+        return garden;
     }
 
     private Garden findEntityById(Long id) {

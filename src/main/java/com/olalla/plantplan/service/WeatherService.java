@@ -5,6 +5,7 @@ import com.olalla.plantplan.dto.DailyWeatherResponse;
 import com.olalla.plantplan.dto.GardenWeatherResponse;
 import com.olalla.plantplan.dto.WeatherForecastData;
 import com.olalla.plantplan.entity.Garden;
+import com.olalla.plantplan.exception.ForbiddenException;
 import com.olalla.plantplan.exception.ResourceNotFoundException;
 import com.olalla.plantplan.repository.GardenRepository;
 import com.olalla.plantplan.weather.WeatherProvider;
@@ -31,9 +32,13 @@ public class WeatherService {
     }
 
     @Transactional(readOnly = true)
-    public GardenWeatherResponse getGardenWeather(Long gardenId) {
+    public GardenWeatherResponse getGardenWeather(Long gardenId, Long userId) {
         Garden garden = gardenRepository.findById(gardenId)
                 .orElseThrow(() -> new ResourceNotFoundException("No existe un huerto con id " + gardenId));
+
+        if (!garden.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("No puedes acceder al huerto con id " + gardenId);
+        }
 
         if (garden.getLatitude() == null || garden.getLongitude() == null) {
             throw new IllegalArgumentException(

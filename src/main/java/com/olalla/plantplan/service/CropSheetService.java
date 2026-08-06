@@ -6,6 +6,7 @@ import com.olalla.plantplan.dto.CropSheetUpdateRequest;
 import com.olalla.plantplan.entity.SunExposure;
 import com.olalla.plantplan.entity.CropSheet;
 import com.olalla.plantplan.entity.User;
+import com.olalla.plantplan.exception.ForbiddenException;
 import com.olalla.plantplan.exception.ResourceNotFoundException;
 import com.olalla.plantplan.repository.CropSheetRepository;
 import com.olalla.plantplan.repository.UserRepository;
@@ -29,31 +30,20 @@ public class CropSheetService {
     }
 
     @Transactional(readOnly = true)
-    public List<CropSheetResponse> findAll() {
-        return cropSheetRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
     public List<CropSheetResponse> findByUserId(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new ResourceNotFoundException("No existe un usuario con id " + userId);
-        }
-
         return cropSheetRepository.findByUserId(userId).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public CropSheetResponse findById(Long id) {
-        return toResponse(findEntityById(id));
+    public CropSheetResponse findById(Long userId, Long cropSheetId) {
+        return toResponse(findOwnedEntity(userId, cropSheetId));
     }
 
     @Transactional
-    public CropSheetResponse create(CropSheetCreateRequest request) {
-        User user = findUserById(request.userId());
+    public CropSheetResponse create(Long userId, CropSheetCreateRequest request) {
+        User user = findUserById(userId);
 
         CropSheet ficha = new CropSheet();
         applyRequest(ficha, request.name(), request.variety(), request.sowingStartMonth(),
@@ -66,21 +56,20 @@ public class CropSheetService {
     }
 
     @Transactional
-    public CropSheetResponse update(Long id, CropSheetUpdateRequest request) {
-        CropSheet ficha = findEntityById(id);
-        User user = findUserById(request.userId());
+    public CropSheetResponse update(Long userId, Long cropSheetId, CropSheetUpdateRequest request) {
+        CropSheet ficha = findOwnedEntity(userId, cropSheetId);
 
         applyRequest(ficha, request.name(), request.variety(), request.sowingStartMonth(),
                 request.sowingEndMonth(), request.transplantStartMonth(), request.transplantEndMonth(),
                 request.harvestStartMonth(), request.harvestEndMonth(), request.wateringFrequencyDays(),
-                request.sunExposure(), request.notes(), user);
+                request.sunExposure(), request.notes(), ficha.getUser());
 
         return toResponse(ficha);
     }
 
     @Transactional
-    public void delete(Long id) {
-        CropSheet ficha = findEntityById(id);
+    public void delete(Long userId, Long cropSheetId) {
+        CropSheet ficha = findOwnedEntity(userId, cropSheetId);
         cropSheetRepository.delete(ficha);
     }
 
@@ -111,6 +100,16 @@ public class CropSheetService {
         ficha.setSunExposure(sunExposure);
         ficha.setNotes(notes);
         ficha.setUser(user);
+    }
+
+    private CropSheet findOwnedEntity(Long userId, Long cropSheetId) {
+        CropSheet ficha = findEntityById(cropSheetId);
+
+        if (!ficha.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("No puedes acceder a la ficha de cultivo con id " + cropSheetId);
+        }
+
+        return ficha;
     }
 
     private CropSheet findEntityById(Long id) {

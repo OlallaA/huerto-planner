@@ -6,6 +6,7 @@ import com.olalla.plantplan.dto.CropUpdateRequest;
 import com.olalla.plantplan.entity.Crop;
 import com.olalla.plantplan.entity.CropSheet;
 import com.olalla.plantplan.entity.Garden;
+import com.olalla.plantplan.exception.ForbiddenException;
 import com.olalla.plantplan.exception.ResourceNotFoundException;
 import com.olalla.plantplan.repository.CropRepository;
 import com.olalla.plantplan.repository.CropSheetRepository;
@@ -36,17 +37,15 @@ public class CropService {
     }
 
     @Transactional(readOnly = true)
-    public List<CropResponse> findAll() {
-        return cropRepository.findAll().stream()
+    public List<CropResponse> findByUserId(Long userId) {
+        return cropRepository.findByGardenUserId(userId).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<CropResponse> findByGardenId(Long gardenId) {
-        if (!gardenRepository.existsById(gardenId)) {
-            throw new ResourceNotFoundException("No existe un huerto con id " + gardenId);
-        }
+    public List<CropResponse> findByGardenId(Long userId, Long gardenId) {
+        findOwnedGarden(userId, gardenId);
 
         return cropRepository.findByGardenId(gardenId).stream()
                 .map(this::toResponse)
@@ -54,10 +53,8 @@ public class CropService {
     }
 
     @Transactional(readOnly = true)
-    public List<CropResponse> findByCropSheetId(Long cropSheetId) {
-        if (!cropSheetRepository.existsById(cropSheetId)) {
-            throw new ResourceNotFoundException("No existe una ficha de cultivo con id " + cropSheetId);
-        }
+    public List<CropResponse> findByCropSheetId(Long userId, Long cropSheetId) {
+        findOwnedCropSheet(userId, cropSheetId);
 
         return cropRepository.findByCropSheetId(cropSheetId).stream()
                 .map(this::toResponse)
@@ -65,14 +62,14 @@ public class CropService {
     }
 
     @Transactional(readOnly = true)
-    public CropResponse findById(Long id) {
-        return toResponse(findEntityById(id));
+    public CropResponse findById(Long userId, Long id) {
+        return toResponse(findOwnedEntity(userId, id));
     }
 
     @Transactional
-    public CropResponse create(CropCreateRequest request) {
-        CropSheet cropSheet = findCropSheetById(request.cropSheetId());
-        Garden garden = findGardenById(request.gardenId());
+    public CropResponse create(Long userId, CropCreateRequest request) {
+        CropSheet cropSheet = findOwnedCropSheet(userId, request.cropSheetId());
+        Garden garden = findOwnedGarden(userId, request.gardenId());
 
         Crop crop = new Crop();
         applyRequest(
@@ -92,10 +89,10 @@ public class CropService {
     }
 
     @Transactional
-    public CropResponse update(Long id, CropUpdateRequest request) {
-        Crop crop = findEntityById(id);
-        CropSheet cropSheet = findCropSheetById(request.cropSheetId());
-        Garden garden = findGardenById(request.gardenId());
+    public CropResponse update(Long userId, Long id, CropUpdateRequest request) {
+        Crop crop = findOwnedEntity(userId, id);
+        CropSheet cropSheet = findOwnedCropSheet(userId, request.cropSheetId());
+        Garden garden = findOwnedGarden(userId, request.gardenId());
 
         applyRequest(
                 crop,
@@ -113,8 +110,8 @@ public class CropService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        Crop crop = findEntityById(id);
+    public void delete(Long userId, Long id) {
+        Crop crop = findOwnedEntity(userId, id);
         reminderService.deleteForCrop(id);
         cropRepository.delete(crop);
     }
@@ -136,6 +133,38 @@ public class CropService {
         crop.setNotes(notes);
         crop.setCropSheet(cropSheet);
         crop.setGarden(garden);
+    }
+
+    private Crop findOwnedEntity(Long userId, Long id) {
+        Crop crop = findEntityById(id);
+
+        if (!crop.getCropSheet().getUser().getId().equals(userId)) {
+            throw new ForbiddenException("No puedes acceder al cultivo con id " + id);
+        }
+
+        return crop;
+    }
+
+    private CropSheet findOwnedCropSheet(Long userId, Long cropSheetId) {
+        CropSheet cropSheet = findCropSheetById(cropSheetId);
+
+        if (!cropSheet.getUser().getId().equals(userId)) {
+            throw new ForbiddenException(
+                    "No puedes acceder a la ficha de cultivo con id " + cropSheetId
+            );
+        }
+
+        return cropSheet;
+    }
+
+    private Garden findOwnedGarden(Long userId, Long gardenId) {
+        Garden garden = findGardenById(gardenId);
+
+        if (!garden.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("No puedes acceder al huerto con id " + gardenId);
+        }
+
+        return garden;
     }
 
     private Crop findEntityById(Long id) {

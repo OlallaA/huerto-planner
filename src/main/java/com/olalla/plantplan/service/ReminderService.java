@@ -10,12 +10,12 @@ import com.olalla.plantplan.entity.Reminder;
 import com.olalla.plantplan.entity.Seed;
 import com.olalla.plantplan.entity.ReminderType;
 import com.olalla.plantplan.entity.User;
+import com.olalla.plantplan.exception.ForbiddenException;
 import com.olalla.plantplan.exception.ResourceNotFoundException;
 import com.olalla.plantplan.repository.CropRepository;
 import com.olalla.plantplan.repository.SeedlingRepository;
 import com.olalla.plantplan.repository.ReminderRepository;
 import com.olalla.plantplan.repository.SeedRepository;
-import com.olalla.plantplan.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,20 +44,17 @@ public class ReminderService {
     );
 
     private final ReminderRepository reminderRepository;
-    private final UserRepository userRepository;
     private final SeedRepository seedRepository;
     private final SeedlingRepository seedlingRepository;
     private final CropRepository cropRepository;
 
     public ReminderService(
             ReminderRepository reminderRepository,
-            UserRepository userRepository,
             SeedRepository seedRepository,
             SeedlingRepository seedlingRepository,
             CropRepository cropRepository
     ) {
         this.reminderRepository = reminderRepository;
-        this.userRepository = userRepository;
         this.seedRepository = seedRepository;
         this.seedlingRepository = seedlingRepository;
         this.cropRepository = cropRepository;
@@ -65,9 +62,6 @@ public class ReminderService {
 
     @Transactional
     public List<ReminderResponse> findByUserAndRange(Long userId, LocalDate from, LocalDate to) {
-        if (!userRepository.existsById(userId)) {
-            throw new ResourceNotFoundException("No existe un usuario con id " + userId);
-        }
         if (from == null || to == null || from.isAfter(to)) {
             throw new IllegalArgumentException("El rango de fechas no es valido");
         }
@@ -87,13 +81,13 @@ public class ReminderService {
     }
 
     @Transactional(readOnly = true)
-    public ReminderResponse findById(Long id) {
-        return toResponse(findEntityById(id));
+    public ReminderResponse findById(Long userId, Long id) {
+        return toResponse(findOwnedEntity(userId, id));
     }
 
     @Transactional
-    public ReminderResponse complete(Long id) {
-        Reminder reminder = findEntityById(id);
+    public ReminderResponse complete(Long userId, Long id) {
+        Reminder reminder = findOwnedEntity(userId, id);
 
         if (reminder.getStatus() == ReminderStatus.CANCELLED) {
             throw new IllegalArgumentException("No se puede completar un recordatorio cancelado");
@@ -463,6 +457,16 @@ public class ReminderService {
     private Reminder findEntityById(Long id) {
         return reminderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No existe un recordatorio con id " + id));
+    }
+
+    private Reminder findOwnedEntity(Long userId, Long id) {
+        Reminder reminder = findEntityById(id);
+
+        if (!reminder.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("No puedes acceder al recordatorio con id " + id);
+        }
+
+        return reminder;
     }
 
     private ReminderResponse toResponse(Reminder reminder) {

@@ -18,6 +18,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, exception.getMessage(), Map.of());
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException exception) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, exception.getMessage(), Map.of());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException exception) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), Map.of());

@@ -3,7 +3,6 @@ package com.olalla.plantplan.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.olalla.plantplan.entity.SunExposure;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
@@ -29,9 +28,6 @@ public record CropSheetUpdateRequest(
 
         SunExposure sunExposure,
 
-        String notes,
-
-        @NotNull(message = "El usuario es obligatorio")
-        Long userId
+        String notes
 ) {
 }

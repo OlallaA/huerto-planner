@@ -3,9 +3,11 @@ package com.olalla.plantplan.controller;
 import com.olalla.plantplan.dto.SeedlingCreateRequest;
 import com.olalla.plantplan.dto.SeedlingResponse;
 import com.olalla.plantplan.dto.SeedlingUpdateRequest;
+import com.olalla.plantplan.security.AuthenticatedUser;
 import com.olalla.plantplan.service.SeedlingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,37 +31,50 @@ public class SeedlingController {
     }
 
     @GetMapping("/seedlings")
-    public List<SeedlingResponse> findAll() {
-        return seedlingService.findAll();
+    public List<SeedlingResponse> findAll(@AuthenticationPrincipal AuthenticatedUser user) {
+        return seedlingService.findByUserId(user.id());
     }
 
     @GetMapping("/crop-sheets/{cropSheetId}/seedlings")
-    public List<SeedlingResponse> findByCropSheetId(@PathVariable Long cropSheetId) {
-        return seedlingService.findByCropSheetId(cropSheetId);
+    public List<SeedlingResponse> findByCropSheetId(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long cropSheetId
+    ) {
+        return seedlingService.findByCropSheetId(user.id(), cropSheetId);
     }
 
     @GetMapping("/seedlings/{id}")
-    public SeedlingResponse findById(@PathVariable Long id) {
-        return seedlingService.findById(id);
+    public SeedlingResponse findById(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id
+    ) {
+        return seedlingService.findById(user.id(), id);
     }
 
     @PostMapping("/seedlings")
     @ResponseStatus(HttpStatus.CREATED)
-    public SeedlingResponse create(@Valid @RequestBody SeedlingCreateRequest request) {
-        return seedlingService.create(request);
+    public SeedlingResponse create(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @Valid @RequestBody SeedlingCreateRequest request
+    ) {
+        return seedlingService.create(user.id(), request);
     }
 
     @PutMapping("/seedlings/{id}")
     public SeedlingResponse update(
+            @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
             @Valid @RequestBody SeedlingUpdateRequest request
     ) {
-        return seedlingService.update(id, request);
+        return seedlingService.update(user.id(), id, request);
     }
 
     @DeleteMapping("/seedlings/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        seedlingService.delete(id);
+    public void delete(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id
+    ) {
+        seedlingService.delete(user.id(), id);
     }
 }

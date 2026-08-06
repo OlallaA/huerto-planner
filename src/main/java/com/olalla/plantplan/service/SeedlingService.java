@@ -5,6 +5,7 @@ import com.olalla.plantplan.dto.SeedlingResponse;
 import com.olalla.plantplan.dto.SeedlingUpdateRequest;
 import com.olalla.plantplan.entity.CropSheet;
 import com.olalla.plantplan.entity.Seedling;
+import com.olalla.plantplan.exception.ForbiddenException;
 import com.olalla.plantplan.exception.ResourceNotFoundException;
 import com.olalla.plantplan.repository.CropSheetRepository;
 import com.olalla.plantplan.repository.SeedlingRepository;
@@ -31,17 +32,15 @@ public class SeedlingService {
     }
 
     @Transactional(readOnly = true)
-    public List<SeedlingResponse> findAll() {
-        return seedlingRepository.findAll().stream()
+    public List<SeedlingResponse> findByUserId(Long userId) {
+        return seedlingRepository.findByCropSheetUserId(userId).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<SeedlingResponse> findByCropSheetId(Long cropSheetId) {
-        if (!cropSheetRepository.existsById(cropSheetId)) {
-            throw new ResourceNotFoundException("No existe una ficha de cultivo con id " + cropSheetId);
-        }
+    public List<SeedlingResponse> findByCropSheetId(Long userId, Long cropSheetId) {
+        findOwnedCropSheet(userId, cropSheetId);
 
         return seedlingRepository.findByCropSheetId(cropSheetId).stream()
                 .map(this::toResponse)
@@ -49,13 +48,13 @@ public class SeedlingService {
     }
 
     @Transactional(readOnly = true)
-    public SeedlingResponse findById(Long id) {
-        return toResponse(findEntityById(id));
+    public SeedlingResponse findById(Long userId, Long id) {
+        return toResponse(findOwnedEntity(userId, id));
     }
 
     @Transactional
-    public SeedlingResponse create(SeedlingCreateRequest request) {
-        CropSheet cropSheet = findCropSheetById(request.cropSheetId());
+    public SeedlingResponse create(Long userId, SeedlingCreateRequest request) {
+        CropSheet cropSheet = findOwnedCropSheet(userId, request.cropSheetId());
 
         Seedling seedling = new Seedling();
         applyRequest(
@@ -74,9 +73,9 @@ public class SeedlingService {
     }
 
     @Transactional
-    public SeedlingResponse update(Long id, SeedlingUpdateRequest request) {
-        Seedling seedling = findEntityById(id);
-        CropSheet cropSheet = findCropSheetById(request.cropSheetId());
+    public SeedlingResponse update(Long userId, Long id, SeedlingUpdateRequest request) {
+        Seedling seedling = findOwnedEntity(userId, id);
+        CropSheet cropSheet = findOwnedCropSheet(userId, request.cropSheetId());
 
         applyRequest(
                 seedling,
@@ -93,8 +92,8 @@ public class SeedlingService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        Seedling seedling = findEntityById(id);
+    public void delete(Long userId, Long id) {
+        Seedling seedling = findOwnedEntity(userId, id);
         reminderService.deleteForSeedling(id);
         seedlingRepository.delete(seedling);
     }
@@ -114,6 +113,28 @@ public class SeedlingService {
         seedling.setTransplantDate(transplantDate);
         seedling.setNotes(notes);
         seedling.setCropSheet(cropSheet);
+    }
+
+    private Seedling findOwnedEntity(Long userId, Long id) {
+        Seedling seedling = findEntityById(id);
+
+        if (!seedling.getCropSheet().getUser().getId().equals(userId)) {
+            throw new ForbiddenException("No puedes acceder al plantel con id " + id);
+        }
+
+        return seedling;
+    }
+
+    private CropSheet findOwnedCropSheet(Long userId, Long cropSheetId) {
+        CropSheet cropSheet = findCropSheetById(cropSheetId);
+
+        if (!cropSheet.getUser().getId().equals(userId)) {
+            throw new ForbiddenException(
+                    "No puedes acceder a la ficha de cultivo con id " + cropSheetId
+            );
+        }
+
+        return cropSheet;
     }
 
     private Seedling findEntityById(Long id) {

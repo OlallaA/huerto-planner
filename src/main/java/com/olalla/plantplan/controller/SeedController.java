@@ -3,9 +3,11 @@ package com.olalla.plantplan.controller;
 import com.olalla.plantplan.dto.SeedCreateRequest;
 import com.olalla.plantplan.dto.SeedResponse;
 import com.olalla.plantplan.dto.SeedUpdateRequest;
+import com.olalla.plantplan.security.AuthenticatedUser;
 import com.olalla.plantplan.service.SeedService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,37 +31,50 @@ public class SeedController {
     }
 
     @GetMapping("/seeds")
-    public List<SeedResponse> findAll() {
-        return seedService.findAll();
+    public List<SeedResponse> findAll(@AuthenticationPrincipal AuthenticatedUser user) {
+        return seedService.findByUserId(user.id());
     }
 
     @GetMapping("/crop-sheets/{cropSheetId}/seeds")
-    public List<SeedResponse> findByCropSheetId(@PathVariable Long cropSheetId) {
-        return seedService.findByCropSheetId(cropSheetId);
+    public List<SeedResponse> findByCropSheetId(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long cropSheetId
+    ) {
+        return seedService.findByCropSheetId(user.id(), cropSheetId);
     }
 
     @GetMapping("/seeds/{id}")
-    public SeedResponse findById(@PathVariable Long id) {
-        return seedService.findById(id);
+    public SeedResponse findById(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id
+    ) {
+        return seedService.findById(user.id(), id);
     }
 
     @PostMapping("/seeds")
     @ResponseStatus(HttpStatus.CREATED)
-    public SeedResponse create(@Valid @RequestBody SeedCreateRequest request) {
-        return seedService.create(request);
+    public SeedResponse create(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @Valid @RequestBody SeedCreateRequest request
+    ) {
+        return seedService.create(user.id(), request);
     }
 
     @PutMapping("/seeds/{id}")
     public SeedResponse update(
+            @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long id,
             @Valid @RequestBody SeedUpdateRequest request
     ) {
-        return seedService.update(id, request);
+        return seedService.update(user.id(), id, request);
     }
 
     @DeleteMapping("/seeds/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        seedService.delete(id);
+    public void delete(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id
+    ) {
+        seedService.delete(user.id(), id);
     }
 }
