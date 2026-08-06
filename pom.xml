@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.olalla</groupId>
-	<artifactId>huerto-planner</artifactId>
+	<artifactId>plantplan</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>PlantPlan</name>
+	<description>Garden planning and crop tracking web application</description>
 	<url/>
 	<licenses>
 		<license/>
