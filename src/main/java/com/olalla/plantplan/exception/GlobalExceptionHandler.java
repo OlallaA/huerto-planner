@@ -23,6 +23,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), Map.of());
     }
 
+    @ExceptionHandler(WeatherProviderException.class)
+    public ResponseEntity<ErrorResponse> handleWeatherProvider(WeatherProviderException exception) {
+        return buildErrorResponse(HttpStatus.BAD_GATEWAY, exception.getMessage(), Map.of());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
         Map<String, String> details = new HashMap<>();

@@ -11,10 +11,10 @@ The goal of the project is to provide an easy and intuitive way to organize a ve
 - Seed and seedling tracking
 - Crop management
 - Calendar reminders (sowing, transplant, watering)
+- Weather forecast per garden (Open-Meteo) with basic watering hint
 
 ## Planned Features
-- Weather API integration
-- Weather-based irrigation recommendations
+- Richer weather-based irrigation recommendations
 - Location-based planting suggestions
 - Personalized notifications
 - Garden activity history
