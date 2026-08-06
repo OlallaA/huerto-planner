@@ -6,6 +6,7 @@ import com.olalla.plantplan.dto.UserUpdateRequest;
 import com.olalla.plantplan.entity.User;
 import com.olalla.plantplan.exception.ResourceNotFoundException;
 import com.olalla.plantplan.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,9 +16,11 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -39,6 +42,7 @@ public class UserService {
         }
 
         User user = new User(request.name(), request.email(), request.password());
+        user.setPassword(passwordEncoder.encode(request.password()));
         User savedUser = userRepository.save(user);
 
         return toResponse(savedUser);
@@ -54,7 +58,7 @@ public class UserService {
 
         user.setName(request.name());
         user.setEmail(request.email());
-        user.setPassword(request.password());
+        user.setPassword(passwordEncoder.encode(request.password()));
 
         return toResponse(user);
     }
@@ -74,7 +78,8 @@ public class UserService {
         return new UserResponse(
                 user.getId(),
                 user.getName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getRole()
         );
     }
 }
